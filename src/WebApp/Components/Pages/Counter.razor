@@ -10,8 +10,10 @@
 <button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
 
 @code {
+    // Component state is kept in memory and resets when the component is recreated.
     private int currentCount = 0;
 
+    // The button calls this handler to update the displayed count.
     private void IncrementCount()
     {
         currentCount++;
