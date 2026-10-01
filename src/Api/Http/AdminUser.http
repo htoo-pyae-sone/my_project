@@ -1,0 +1,36 @@
+@baseUrl = http://localhost:5131
+@userId = 1
+
+### List administrative users
+GET {{baseUrl}}/api/admin_user
+Accept: application/json
+
+### Create an administrative user
+POST {{baseUrl}}/api/admin_user
+Content-Type: application/json
+
+{
+  "userName": "rest-client-test1",
+  "email": "rest-client-test@example.com",
+  "password": "RestClient-Test-123!",
+  "isActive": true
+}
+
+### Get an administrative user by database ID
+# Set @userId to the "data" value returned by the create request.
+GET {{baseUrl}}/api/admin_user/{{userId}}
+Accept: application/json
+
+### Update an administrative user
+PUT {{baseUrl}}/api/admin_user/{{userId}}
+Content-Type: application/json
+
+{
+  "userName": "rest-client-test-updated",
+  "email": "rest-client-test-updated@example.com",
+  "isActive": true
+}
+
+### Soft-delete an administrative user
+DELETE {{baseUrl}}/api/admin_user/{{userId}}
+Accept: application/json

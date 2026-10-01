@@ -47,5 +47,18 @@ public sealed class DomainExceptionMiddleware
                 message = _configuration[exception.Code] ?? "The request could not be completed."
             });
         }
+        catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(
+                exception,
+                "Unhandled exception while processing request {RequestPath}",
+                context.Request.Path
+            );
+            throw;
+        }
     }
 }

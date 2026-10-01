@@ -1,40 +1,37 @@
-using Domain;
+using Api.Configuration;
 using Api.Middleware;
 using DotNetEnv;
+using Domain;
 
-// Search parent directories so the repository-root .env works when the API starts in src/Api.
-// Load it before creating the host so ASP.NET Core can read its values as configuration.
+// Load the repository-root .env for local development before ASP.NET Core creates its configuration.
 Env.TraversePath().Load();
 
-// Register the API endpoints and the services provided by the domain layer.
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Configuration.AddJsonFile(
-    Path.Combine(AppContext.BaseDirectory, "Resources", "Messages.en.json"),
-    optional: false,
-    reloadOnChange: false
-);
+builder.Configuration.AddSharedErrorMessages();
 
 builder.Services.AddControllers();
-
 builder.Services.AddOpenApi();
-
+builder.Services.AddProblemDetails();
 builder.Services.AddDomain(builder.Configuration);
 
 var app = builder.Build();
 
-app.UseMiddleware<DomainExceptionMiddleware>();
+if (!app.Environment.IsDevelopment())
+    app.UseExceptionHandler();
 
 if (app.Environment.IsDevelopment())
 {
-    // Keep the OpenAPI document available during development without exposing it by default in production.
     app.MapOpenApi();
 }
 
 app.UseHttpsRedirection();
 
+app.UseMiddleware<DomainExceptionMiddleware>();
+
 app.UseAuthorization();
 
+app.MapHealthChecks("/api/health");
 app.MapControllers();
 
 app.Run();
