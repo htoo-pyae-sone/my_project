@@ -1,33 +1,46 @@
 # MyProject
 
-MyProject is a .NET 10 solution containing a small ASP.NET Core API, a Blazor web app, and shared projects for database, domain, contracts, and common code. The API and web app are separate applications and can be started independently.
+MyProject is a .NET 10 solution with an ASP.NET Core API and a Blazor web app. Both apps share projects for database access, domain logic, and common types.
 
 ## Projects
 
-- `src/Api` exposes controller-based HTTP endpoints. Its weather forecast endpoint currently returns generated sample data.
-- `src/WebApp` is a Blazor interactive server app with Home, Counter, and Weather pages.
-- `src/Domain` registers domain services and configures the database connection.
-- `src/Database` contains the EF Core context, entities, and entity mappings. It uses MySQL and snake_case naming.
-- `src/Contracts` and `src/Shared` are intended for types shared across projects.
-- `tests/UnitTests` contains the xUnit test project.
+- `src/Api` — ASP.NET Core API. Domain rule errors are returned as HTTP 400 JSON responses with a stable `code` and an English `message`.
+- `src/WebApp` — Blazor interactive server app with Home, Counter, and Weather pages.
+- `src/Domain` — application services and database registration.
+- `src/Database` — EF Core context, entities, mappings, and migrations. MySQL is the configured database provider.
+- `src/Contracts` and `src/Shared` — types and resources shared between projects.
+- `tests/UnitTests` — xUnit test project.
 
-## Requirements
+## Requirements and configuration
 
 - .NET SDK 10.0
-- A MySQL connection string named `DefaultConnection` when starting the API
+- MySQL, for running the API
 
-Configure the connection string outside source control, for example with .NET user secrets in the API project or the `ConnectionStrings__DefaultConnection` environment variable. The expected format is a MySQL connection string, such as `Server=localhost;Database=myproject;User=app;Password=...`. Do not commit real credentials. .NET does not load `.env` files by default, so setting that environment variable directly is the simplest local option.
+The API requires a connection string named `DefaultConnection`. Keep credentials out of source control. For local development, configure .NET user secrets in the API project or set the `ConnectionStrings__DefaultConnection` environment variable. A MySQL connection string looks like `Server=localhost;Database=myproject;User=app;Password=...`.
 
-## Run
+## Run the apps
 
-From the repository root, start either app:
+Run commands from the repository root. Start either application independently:
 
 ```sh
 dotnet run --project src/Api/Api.csproj
 dotnet run --project src/WebApp/WebApp.csproj
 ```
 
-The API publishes its OpenAPI document in Development mode. Local URLs are configured in each project's `Properties/launchSettings.json`.
+The API publishes its OpenAPI document in Development mode. Local URLs are configured in each app's `Properties/launchSettings.json`.
+
+## Error responses
+
+When a domain rule rejects an API request, the API returns HTTP 400 with a body like:
+
+```json
+{
+  "code": "EMAIL_REQUIRED",
+  "message": "Please enter an email address."
+}
+```
+
+The codes are defined in `src/Shared/Constants/ErrorCodes.cs`; English messages are in `src/Shared/Resources/Messages.en.json`. The API logs the error code and request path.
 
 ## Build and test
 
@@ -36,4 +49,6 @@ dotnet build MyProject.slnx
 dotnet test tests/UnitTests/UnitTests.csproj
 ```
 
-The test project is currently a starter scaffold; add focused tests as application behavior is implemented.
+## Contributing
+
+Keep API, UI, domain, and persistence responsibilities in their existing projects. Add or update focused tests when changing behavior, and keep this README current when setup or user-visible behavior changes.

@@ -21,4 +21,8 @@
     <ProjectReference Include="..\Shared\Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="..\Shared\Resources\Messages.en.json" Link="Resources\Messages.en.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

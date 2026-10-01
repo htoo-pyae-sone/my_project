@@ -1,4 +1,4 @@
-namespace Shared.Configuration;
+namespace Shared.Constants;
 
 /// <summary>
 /// Centralizes configuration paths shared by application and domain code.

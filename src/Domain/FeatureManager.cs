@@ -2,7 +2,7 @@ using Database.AppDbContextModels;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Shared.Configuration;
+using Shared.Constants;
 
 namespace Domain;
 
