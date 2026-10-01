@@ -12,7 +12,9 @@
 ## Working conventions
 
 - Keep API, UI, domain, and persistence responsibilities in their existing projects.
-- When writing or changing code, review the changed code for readability, correctness, maintainability, and useful comments. Add comments where they explain intent, a non-obvious decision, or a constraint. Do not add comments that merely narrate simple syntax, and do not comment every line.
+- Treat every code change as requiring a review before finishing, whether the user asks for implementation or says “check my new codes.” For review-only requests, inspect the relevant changed code and report concrete findings with file and location. Do not edit code during a review unless the user explicitly authorizes the specific changes first. If there are no findings, say so plainly.
+- When writing or changing code, review the changed code for readability, correctness, maintainability, and comments. Add concise comments to new types and public members, including DTO properties, to explain their purpose or contract. Comments should add meaning rather than restate the code; do not comment every line.
+- After code changes, update `README.md` when the change affects user-visible behavior, project structure, configuration, setup, or run/build instructions. Update this `AGENTS.md` when the change affects project conventions, architecture guidance, or recurring instructions for future agents. Keep both documents accurate and concise; do not edit them for implementation details that do not help users or future contributors understand or operate the project.
 - In the final response, call out any meaningful code quality issues or missing explanatory comments you find. Suggest a concrete improvement and explain why it is better in plain language. Separate optional suggestions from changes actually made; do not silently make unrelated or behavior-changing improvements.
 - Preserve existing behavior unless the task calls for a behavior change. Keep changes focused and avoid editing generated or third-party assets under `wwwroot/lib`.
 - Do not put credentials in tracked configuration. The API's domain registration requires `ConnectionStrings:DefaultConnection`; use user secrets or an environment variable for local configuration.
@@ -29,6 +31,8 @@ Before finishing a code task:
 2. Check that comments explain why or clarify behavior where needed, rather than repeating what the code already says.
 3. If you find an issue outside the requested change, explain the problem, propose a specific fix, and say what benefit it provides. Ask before making a separate behavior change when the user has not requested it.
 4. Summarize what was changed and why. Mention relevant checks that were run and their results; never imply checks were run when they were not.
+
+When the user says “check my new codes” (or asks to check/review recent code), treat it as an explicit code review request: inspect the new or changed code and report correctness and maintainability issues with file locations, along with proposed fixes. This request does not authorize edits. Wait for the user's explicit approval before changing code, even when a fix appears clear or within scope. Do not require the user to repeat these review expectations. If the intended code changes are unclear, review the most recent changes in the workspace and state what you reviewed.
 
 ## Useful commands
 

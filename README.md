@@ -37,3 +37,7 @@ dotnet test tests/UnitTests/UnitTests.csproj
 ```
 
 The test project is currently a starter scaffold; add focused tests as application behavior is implemented.
+
+## Contributor notes
+
+Review code changes before considering a task complete. When asked to “check my new codes,” inspect recent changes for correctness and maintainability, then report findings with file locations. A review request does not authorize edits; wait for explicit approval before fixing reported issues. See [`AGENTS.md`](AGENTS.md) for the full review and documentation conventions.
