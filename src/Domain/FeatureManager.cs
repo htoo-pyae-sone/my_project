@@ -1,4 +1,6 @@
 using Database.AppDbContextModels;
+using Domain.Features.AdminUserFeature;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,6 +31,9 @@ public static class FeatureManager
         services.AddDbContext<AppDbContext>(opt =>
             opt.UseMySQL(connectionString).UseSnakeCaseNamingConvention()
         );
+
+        services.AddScoped<IPasswordHasher<AdminUser>, PasswordHasher<AdminUser>>();
+        services.AddScoped<IAdminUserService, AdminUserService>();
 
         return services;
     }

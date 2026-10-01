@@ -2,6 +2,11 @@
   "EMAIL_REQUIRED": "Please enter an email address.",
   "USERNAME_REQUIRED": "Please enter a username.",
   "PASSWORD_HASH_REQUIRED": "Please enter a password.",
+  "PASSWORD_REQUIRED": "Please enter a password.",
+  "INVALID_USER_ID": "The user identifier is invalid.",
+  "ADMIN_USER_NOT_FOUND": "The requested administrative user was not found.",
+  "USERNAME_ALREADY_EXISTS": "That username is already in use.",
+  "EMAIL_ALREADY_EXISTS": "That email address is already in use.",
   "USER_ALREADY_ACTIVE": "This user is already active.",
   "USER_ALREADY_INACTIVE": "This user is already inactive."
 }

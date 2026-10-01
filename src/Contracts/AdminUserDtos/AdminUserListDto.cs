@@ -16,5 +16,5 @@ public record class AdminUserListDto
     public string Email { get; set; } = null!;
 
     /// <summary>Gets or sets whether the user account is active.</summary>
-    public bool IsActive { get; set; } = true;
+    public bool IsActive { get; set; }
 }
