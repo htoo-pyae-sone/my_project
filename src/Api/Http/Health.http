@@ -1,0 +1,5 @@
+@baseUrl = http://localhost:5131
+
+### Check API and database health
+GET {{baseUrl}}/api/health
+Accept: text/plain

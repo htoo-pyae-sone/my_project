@@ -16,7 +16,7 @@ MyProject is a .NET 10 solution with an ASP.NET Core API and a Blazor web app. B
 - .NET SDK 10.0
 - MySQL, for running the API
 
-The API requires a connection string named `DefaultConnection`. Keep credentials out of source control. For local development, configure .NET user secrets in the API project or set the `ConnectionStrings__DefaultConnection` environment variable. A MySQL connection string looks like `Server=localhost;Database=myproject;User=app;Password=...`.
+The API requires a connection string named `DefaultConnection`. Keep credentials out of source control. For local development, this project loads a repository-root `.env` file through `DotNetEnv`; you can also configure .NET user secrets or set the `ConnectionStrings__DefaultConnection` environment variable. A MySQL connection string looks like `Server=localhost;Database=myproject;User=app;Password=...`.
 
 ## Run the apps
 
@@ -28,6 +28,8 @@ dotnet run --project src/WebApp/WebApp.csproj
 ```
 
 The API publishes its OpenAPI document in Development mode. Local URLs are configured in each app's `Properties/launchSettings.json`.
+
+The `GET /health` endpoint checks database connectivity. It returns a healthy response when the API can connect to MySQL and an unhealthy status when it cannot. REST Client requests are organized by feature under `src/Api/Http`, such as `Health.http` and `AdminUser.http`.
 
 ## Administrative user API
 
@@ -67,6 +69,8 @@ Domain rule violations raised as `DomainException` are handled by API middleware
   "message": "Please enter an email address."
 }
 ```
+
+Unexpected exceptions are logged by the API and return a generic HTTP 500 problem-details response outside Development, without exposing internal exception details.
 
 Error codes are stable identifiers defined in `src/Shared/Constants/ErrorCodes.cs`; their English messages are in `src/Shared/Resources/Messages.en.json`. The same shared message file is embedded for `Result<T>` and copied to API output for middleware. The API logs domain exception codes and request paths. When adding an error, add both the code constant and its matching message key.
 

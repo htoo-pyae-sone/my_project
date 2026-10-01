@@ -1,5 +1,6 @@
 using Database.AppDbContextModels;
 using Domain.Features.AdminUserFeature;
+using Domain.Health;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -8,7 +9,7 @@ using Shared.Constants;
 
 namespace Domain;
 
-/// <summary>Registers domain-layer services and their database dependencies.</summary>
+/// <summary>Registers domain-layer services, database dependencies, and health checks.</summary>
 public static class FeatureManager
 {
     /// <summary>
@@ -31,6 +32,8 @@ public static class FeatureManager
         services.AddDbContext<AppDbContext>(opt =>
             opt.UseMySQL(connectionString).UseSnakeCaseNamingConvention()
         );
+
+        services.AddHealthChecks().AddCheck<DatabaseHealthCheck>("database");
 
         services.AddScoped<IPasswordHasher<AdminUser>, PasswordHasher<AdminUser>>();
         services.AddScoped<IAdminUserService, AdminUserService>();
