@@ -16,6 +16,8 @@
 - In the final response, call out any meaningful code quality issues or missing explanatory comments you find. Suggest a concrete improvement and explain why it is better in plain language. Separate optional suggestions from changes actually made; do not silently make unrelated or behavior-changing improvements.
 - Preserve existing behavior unless the task calls for a behavior change. Keep changes focused and avoid editing generated or third-party assets under `wwwroot/lib`.
 - Do not put credentials in tracked configuration. The API's domain registration requires `ConnectionStrings:DefaultConnection`; use user secrets or an environment variable for local configuration.
+- Do not add `.env` files or a dotenv dependency just for local settings unless the task specifically requires dotenv support; .NET does not load `.env` files by default. The standard environment variable is `ConnectionStrings__DefaultConnection`.
+- Never open, read, print, search, copy, or otherwise inspect `.env`. Treat it as private local configuration; use `.env.example` for configuration shape and keys. Do not include `.env` contents in logs, tool output, commits, or responses.
 - The solution targets .NET 10. Follow the existing nullable reference type and implicit using settings.
 - Add or update tests for behavior changes when appropriate. Do not claim the test suite passes unless it has been run.
 

@@ -2,6 +2,7 @@ using Database.AppDbContextModels;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Shared.Configuration;
 
 namespace Domain;
 
@@ -19,9 +20,9 @@ public static class FeatureManager
         // Fail during startup with a clear configuration error instead of deferring the failure
         // until the first database operation.
         var connectionString =
-            configuration.GetConnectionString("DefaultConnection")
+            configuration[ConfigurationKeys.DefaultConnection]
             ?? throw new InvalidOperationException(
-                "Missing ConnectionStrings:DefaultConnection in configuration."
+                $"Missing configuration: {ConfigurationKeys.DefaultConnection}"
             );
 
         // Use MySQL and snake_case table/column names to match the database naming convention.

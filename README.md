@@ -14,9 +14,9 @@ MyProject is a .NET 10 solution containing a small ASP.NET Core API, a Blazor we
 ## Requirements
 
 - .NET SDK 10.0
-- A MySQL database for API startup, with a connection string named `DefaultConnection`
+- A MySQL connection string named `DefaultConnection` when starting the API
 
-Configure the database connection outside source control, for example with .NET user secrets in the API project or the `ConnectionStrings__DefaultConnection` environment variable. The expected format is a MySQL connection string, such as `Server=localhost;Database=myproject;User=app;Password=...`. Do not commit real credentials.
+Configure the connection string outside source control, for example with .NET user secrets in the API project or the `ConnectionStrings__DefaultConnection` environment variable. The expected format is a MySQL connection string, such as `Server=localhost;Database=myproject;User=app;Password=...`. Do not commit real credentials. .NET does not load `.env` files by default, so setting that environment variable directly is the simplest local option.
 
 ## Run
 
