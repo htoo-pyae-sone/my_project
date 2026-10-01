@@ -1,0 +1,7 @@
+{
+  "EMAIL_REQUIRED": "Please enter an email address.",
+  "USERNAME_REQUIRED": "Please enter a username.",
+  "PASSWORD_HASH_REQUIRED": "Please enter a password.",
+  "USER_ALREADY_ACTIVE": "This user is already active.",
+  "USER_ALREADY_INACTIVE": "This user is already inactive."
+}

@@ -28,6 +28,7 @@ dotnet run --project src/WebApp/WebApp.csproj
 ```
 
 The API publishes its OpenAPI document in Development mode. Local URLs are configured in each project's `Properties/launchSettings.json`.
+Domain rule errors are returned as HTTP 400 JSON responses with a stable `code` and an English `message` looked up from `src/Shared/Resources/Messages.en.json`.
 
 ## Build and test
 

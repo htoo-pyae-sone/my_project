@@ -37,7 +37,7 @@ public class AdminUser : AuditableEntity
     public void Activate()
     {
         if (IsActive)
-            throw new DomainException(Messages.UserAlreadyActive);
+            throw new DomainException(ErrorCodes.UserAlreadyActive);
 
         IsActive = true;
     }
@@ -46,7 +46,7 @@ public class AdminUser : AuditableEntity
     public void Deactivate()
     {
         if (!IsActive)
-            throw new DomainException(Messages.UserAlreadyInactive);
+            throw new DomainException(ErrorCodes.UserAlreadyInactive);
 
         IsActive = false;
     }
@@ -56,7 +56,7 @@ public class AdminUser : AuditableEntity
     public void ChangeEmail(string email)
     {
         if (string.IsNullOrWhiteSpace(email))
-            throw new DomainException(Messages.EmailRequired);
+            throw new DomainException(ErrorCodes.EmailRequired);
 
         Email = email.Trim();
     }
@@ -66,7 +66,7 @@ public class AdminUser : AuditableEntity
     public void ChangeUserName(string userName)
     {
         if (string.IsNullOrWhiteSpace(userName))
-            throw new DomainException(Messages.UserNameRequired);
+            throw new DomainException(ErrorCodes.UserNameRequired);
 
         UserName = userName.Trim();
     }
@@ -76,7 +76,7 @@ public class AdminUser : AuditableEntity
     public void ChangePasswordHash(string passwordHash)
     {
         if (string.IsNullOrWhiteSpace(passwordHash))
-            throw new DomainException(Messages.PasswordHashRequired);
+            throw new DomainException(ErrorCodes.PasswordHashRequired);
 
         PasswordHash = passwordHash;
     }
