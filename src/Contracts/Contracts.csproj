@@ -7,7 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="..\Shared\Resources\Messages.en.json" Link="Resources\Messages.en.json" LogicalName="Contracts.Resources.Messages.en.json" />
+    <EmbeddedResource Include="../Shared/Resources/Messages.en.json"
+                      Link="Resources/Messages.en.json"
+                      LogicalName="Contracts.Resources.Messages.en.json"
+                      WithCulture="false" />
   </ItemGroup>
 
 </Project>

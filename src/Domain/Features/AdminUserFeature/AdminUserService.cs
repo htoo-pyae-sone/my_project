@@ -11,8 +11,14 @@ namespace Domain.Features.AdminUserFeature;
 /// <summary>Implements database-backed operations for administrative user accounts.</summary>
 public sealed class AdminUserService : IAdminUserService
 {
+    #region Dependencies
+
     private readonly AppDbContext _dbContext;
     private readonly IPasswordHasher<AdminUser> _passwordHasher;
+
+    #endregion
+
+    #region Constructor
 
     /// <summary>Creates the service with its database context and password hasher.</summary>
     /// <param name="dbContext">Database context used to persist account changes.</param>
@@ -22,6 +28,10 @@ public sealed class AdminUserService : IAdminUserService
         _dbContext = dbContext;
         _passwordHasher = passwordHasher;
     }
+
+    #endregion
+
+    #region GetAllAsync
 
     /// <inheritdoc />
     public async Task<Result<List<AdminUserListDto>>> GetAllAsync(CancellationToken cancellationToken)
@@ -43,6 +53,10 @@ public sealed class AdminUserService : IAdminUserService
 
         return Result<List<AdminUserListDto>>.Success(users);
     }
+
+    #endregion
+
+    #region GetByIdAsync
 
     /// <inheritdoc />
     public async Task<Result<AdminUserListDto>> GetByIdAsync(long id, CancellationToken cancellationToken)
@@ -68,6 +82,10 @@ public sealed class AdminUserService : IAdminUserService
             ? Result<AdminUserListDto>.Failure(ResultType.NotFound, ErrorCodes.AdminUserNotFound)
             : Result<AdminUserListDto>.Success(user);
     }
+
+    #endregion
+
+    #region CreateAsync
 
     /// <inheritdoc />
     public async Task<Result<long>> CreateAsync(
@@ -118,6 +136,10 @@ public sealed class AdminUserService : IAdminUserService
 
         return Result<long>.Success(user.Id);
     }
+
+    #endregion
+
+    #region UpdateAsync
 
     /// <inheritdoc />
     public async Task<Result<AdminUserListDto>> UpdateAsync(
@@ -179,6 +201,10 @@ public sealed class AdminUserService : IAdminUserService
         return Result<AdminUserListDto>.Success(ToListDto(user));
     }
 
+    #endregion
+
+    #region DeleteAsync
+
     /// <inheritdoc />
     public async Task<Result<bool>> DeleteAsync(long id, CancellationToken cancellationToken)
     {
@@ -199,6 +225,10 @@ public sealed class AdminUserService : IAdminUserService
         return Result<bool>.Success(true);
     }
 
+    #endregion
+
+    #region ToListDto
+
     private static AdminUserListDto ToListDto(AdminUser user) => new()
     {
         Id = user.Id,
@@ -207,4 +237,6 @@ public sealed class AdminUserService : IAdminUserService
         Email = user.Email,
         IsActive = user.IsActive
     };
+
+    #endregion
 }

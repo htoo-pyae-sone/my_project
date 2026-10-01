@@ -29,9 +29,37 @@ dotnet run --project src/WebApp/WebApp.csproj
 
 The API publishes its OpenAPI document in Development mode. Local URLs are configured in each app's `Properties/launchSettings.json`.
 
-## Error responses
+## Administrative user API
 
-When a domain rule rejects an API request, the API returns HTTP 400 with a body like:
+The API provides these administrative user endpoints:
+
+- `GET /api/AdminUser` — list users that have not been deleted.
+- `GET /api/AdminUser/{id}` — get a user by database ID.
+- `POST /api/AdminUser` — create a user; returns HTTP 201 and a link to the new user.
+- `PUT /api/AdminUser/{id}` — update a user's name, email, and optional active status.
+- `DELETE /api/AdminUser/{id}` — soft-delete a user.
+
+Successful responses include the `Result<T>` envelope described below. Deleting a user marks the account as deleted while preserving its record and audit history.
+
+## API results and errors
+
+Application services return a `Result<T>` to describe an operation's outcome. A successful result includes its data; a failed result includes a result type, a stable error code, and an English message. API controllers map the result type to an HTTP status: general errors, validation errors, invalid data, and bad requests use 400; duplicate records and conflicts use 409; missing records use 404; forbidden uses 403; unauthorized uses 401; and system errors use 500. Success and warnings use 200.
+
+A result-based response has this shape (some values can be null when they do not apply):
+
+```json
+{
+  "isSuccess": false,
+  "isError": true,
+  "type": "ValidationError",
+  "code": "EMAIL_REQUIRED",
+  "message": "Please enter an email address.",
+  "target": null,
+  "data": null
+}
+```
+
+Domain rule violations raised as `DomainException` are handled by API middleware. They return HTTP 400 with a smaller body:
 
 ```json
 {
@@ -40,7 +68,7 @@ When a domain rule rejects an API request, the API returns HTTP 400 with a body 
 }
 ```
 
-The codes are defined in `src/Shared/Constants/ErrorCodes.cs`; English messages are in `src/Shared/Resources/Messages.en.json`. The API logs the error code and request path.
+Error codes are stable identifiers defined in `src/Shared/Constants/ErrorCodes.cs`; their English messages are in `src/Shared/Resources/Messages.en.json`. The same shared message file is embedded for `Result<T>` and copied to API output for middleware. The API logs domain exception codes and request paths. When adding an error, add both the code constant and its matching message key.
 
 ## Build and test
 
