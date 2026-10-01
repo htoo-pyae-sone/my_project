@@ -6,7 +6,6 @@ namespace Shared.Base;
 
 /// <summary>Provides shared HTTP response mapping for API controllers.</summary>
 [ApiController]
-[Route("api/[controller]")]
 public abstract class BaseController : ControllerBase
 {
     /// <summary>Maps an operation result to the matching HTTP response.</summary>

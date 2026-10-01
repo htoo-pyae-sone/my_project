@@ -33,11 +33,11 @@ The API publishes its OpenAPI document in Development mode. Local URLs are confi
 
 The API provides these administrative user endpoints:
 
-- `GET /api/AdminUser` — list users that have not been deleted.
-- `GET /api/AdminUser/{id}` — get a user by database ID.
-- `POST /api/AdminUser` — create a user; returns HTTP 201 and a link to the new user.
-- `PUT /api/AdminUser/{id}` — update a user's name, email, and optional active status.
-- `DELETE /api/AdminUser/{id}` — soft-delete a user.
+- `GET /api/admin_user` — list users that have not been deleted.
+- `GET /api/admin_user/{id}` — get a user by database ID.
+- `POST /api/admin_user` — create a user; returns HTTP 201 and a link to the new user.
+- `PUT /api/admin_user/{id}` — update a user's name, email, and optional active status.
+- `DELETE /api/admin_user/{id}` — soft-delete a user.
 
 Successful responses include the `Result<T>` envelope described below. Deleting a user marks the account as deleted while preserving its record and audit history.
 

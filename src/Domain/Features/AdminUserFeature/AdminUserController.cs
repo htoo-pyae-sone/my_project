@@ -5,6 +5,7 @@ using Shared.Base;
 namespace Domain.Features.AdminUserFeature;
 
 /// <summary>Exposes HTTP endpoints for managing administrative user accounts.</summary>
+[Route("api/admin_user")]
 public sealed class AdminUserController : BaseController
 {
     #region Dependencies
