@@ -37,14 +37,14 @@ public sealed class AdminUserController : BaseController
 
     #region GetByIdAsync
 
-    /// <summary>Gets a non-deleted administrative user by its database identifier.</summary>
-    /// <param name="id">Database identifier of the administrative user.</param>
+    /// <summary>Gets a non-deleted administrative user by its public identifier.</summary>
+    /// <param name="publicId">Stable public identifier of the administrative user.</param>
     /// <param name="cancellationToken">Token used to cancel the request.</param>
-    [HttpGet("{id:long}", Name = nameof(GetByIdAsync))]
+    [HttpGet("{publicId:guid}", Name = nameof(GetByIdAsync))]
     public async Task<IActionResult> GetByIdAsync(
-        [FromRoute] long id,
+        [FromRoute] Guid publicId,
         CancellationToken cancellationToken
-    ) => Execute(await _adminUserService.GetByIdAsync(id, cancellationToken).ConfigureAwait(false));
+    ) => Execute(await _adminUserService.GetByIdAsync(publicId, cancellationToken).ConfigureAwait(false));
 
     #endregion
 
@@ -63,7 +63,7 @@ public sealed class AdminUserController : BaseController
         if (!result.IsSuccess)
             return Execute(result);
 
-        return CreatedAtRoute(nameof(GetByIdAsync), new { id = result.Data }, result);
+        return CreatedAtRoute(nameof(GetByIdAsync), new { publicId = result.Data }, result);
     }
 
     #endregion
@@ -71,28 +71,28 @@ public sealed class AdminUserController : BaseController
     #region UpdateAsync
 
     /// <summary>Updates an administrative user's profile and optional active status.</summary>
-    /// <param name="id">Database identifier of the administrative user.</param>
+    /// <param name="publicId">Stable public identifier of the administrative user.</param>
     /// <param name="request">Profile fields and optional status update.</param>
     /// <param name="cancellationToken">Token used to cancel the request.</param>
-    [HttpPut("{id:long}")]
+    [HttpPut("{publicId:guid}")]
     public async Task<IActionResult> UpdateAsync(
-        [FromRoute] long id,
+        [FromRoute] Guid publicId,
         [FromBody] UpdateAdminUserDto request,
         CancellationToken cancellationToken
-    ) => Execute(await _adminUserService.UpdateAsync(id, request, cancellationToken).ConfigureAwait(false));
+    ) => Execute(await _adminUserService.UpdateAsync(publicId, request, cancellationToken).ConfigureAwait(false));
 
     #endregion
 
     #region DeleteAsync
 
     /// <summary>Soft-deletes an administrative user.</summary>
-    /// <param name="id">Database identifier of the administrative user.</param>
+    /// <param name="publicId">Stable public identifier of the administrative user.</param>
     /// <param name="cancellationToken">Token used to cancel the request.</param>
-    [HttpDelete("{id:long}")]
+    [HttpDelete("{publicId:guid}")]
     public async Task<IActionResult> DeleteAsync(
-        [FromRoute] long id,
+        [FromRoute] Guid publicId,
         CancellationToken cancellationToken
-    ) => Execute(await _adminUserService.DeleteAsync(id, cancellationToken).ConfigureAwait(false));
+    ) => Execute(await _adminUserService.DeleteAsync(publicId, cancellationToken).ConfigureAwait(false));
 
     #endregion
 }

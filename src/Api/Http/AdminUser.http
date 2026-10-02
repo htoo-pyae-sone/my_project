@@ -1,5 +1,5 @@
 @baseUrl = http://localhost:5131
-@userId = 1
+@publicId = 00000000-0000-0000-0000-000000000000
 
 ### List administrative users
 GET {{baseUrl}}/api/admin_user
@@ -16,13 +16,13 @@ Content-Type: application/json
   "isActive": true
 }
 
-### Get an administrative user by database ID
-# Set @userId to the "data" value returned by the create request.
-GET {{baseUrl}}/api/admin_user/{{userId}}
+### Get an administrative user by public ID
+# Set @publicId to the "data" value returned by the create request.
+GET {{baseUrl}}/api/admin_user/{{publicId}}
 Accept: application/json
 
 ### Update an administrative user
-PUT {{baseUrl}}/api/admin_user/{{userId}}
+PUT {{baseUrl}}/api/admin_user/{{publicId}}
 Content-Type: application/json
 
 {
@@ -32,5 +32,5 @@ Content-Type: application/json
 }
 
 ### Soft-delete an administrative user
-DELETE {{baseUrl}}/api/admin_user/{{userId}}
+DELETE {{baseUrl}}/api/admin_user/{{publicId}}
 Accept: application/json
