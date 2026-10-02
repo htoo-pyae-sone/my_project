@@ -1,8 +1,11 @@
 {
   "EMAIL_REQUIRED": "Please enter an email address.",
+  "EMAIL_INVALID": "Please enter a valid email address.",
   "USERNAME_REQUIRED": "Please enter username.",
+  "USERNAME_INVALID": "Username must contain only letters and be no longer than 20 characters.",
   "PASSWORD_HASH_REQUIRED": "Please enter password.",
   "PASSWORD_REQUIRED": "Please enter password.",
+  "PASSWORD_POLICY_INVALID": "Password must be at least 8 characters long and contain uppercase and lowercase letters, a number, and a special character.",
   "INVALID_USER_ID": "The user id is invalid.",
   "ADMIN_USER_NOT_FOUND": "The requested admin user was not found.",
   "USERNAME_ALREADY_EXISTS": "That username is already in use.",

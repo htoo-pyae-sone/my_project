@@ -3,9 +3,6 @@ namespace Contracts.AdminUserDtos;
 /// <summary>Contains the user details returned to administrative user listings.</summary>
 public record class AdminUserListDto
 {
-    /// <summary>Gets or sets the database identifier for the user.</summary>
-    public long Id { get; set; }
-
     /// <summary>Gets or sets the stable public identifier exposed outside the database.</summary>
     public Guid PublicId { get; set; }
 

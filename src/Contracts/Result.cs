@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Contracts;
 
 /// <summary>Represents the outcome of an operation and its optional typed data.</summary>
@@ -32,8 +34,13 @@ public sealed class Result<T>
     /// <summary>Gets the optional field or target associated with the result.</summary>
     public string? Target { get; }
 
-    /// <summary>Gets the operation data, when available.</summary>
+    /// <summary>Gets the typed operation data, when available.</summary>
+    [JsonIgnore]
     public T? Data { get; }
+
+    /// <summary>Gets the operation data for JSON responses, or null for failures.</summary>
+    [JsonPropertyName("data")]
+    public object? SerializedData => IsSuccess ? Data : null;
 
     /// <summary>Creates a successful result containing the operation data.</summary>
     /// <param name="data">Data produced by the operation.</param>
@@ -84,6 +91,7 @@ internal static class ErrorMessageCatalog
 }
 
 /// <summary>Classifies the outcome of an operation.</summary>
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum ResultType
 {
     /// <summary>The operation completed successfully.</summary>

@@ -42,19 +42,20 @@ public sealed class AdminUserService : IAdminUserService
     #region GetAllAsync
 
     /// <inheritdoc />
-    public async Task<Result<List<AdminUserListDto>>> GetAllAsync(CancellationToken cancellationToken)
+    public async Task<Result<List<AdminUserListDto>>> GetAllAsync(
+        CancellationToken cancellationToken
+    )
     {
-        var users = await _dbContext.AdminUsers
-            .AsNoTracking()
+        var users = await _dbContext
+            .AdminUsers.AsNoTracking()
             .Where(user => !user.IsDeleted)
             .OrderByDescending(user => user.Id)
             .Select(user => new AdminUserListDto
             {
-                Id = user.Id,
                 PublicId = user.PublicId,
                 UserName = user.UserName,
                 Email = user.Email,
-                IsActive = user.IsActive
+                IsActive = user.IsActive,
             })
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
@@ -67,25 +68,27 @@ public sealed class AdminUserService : IAdminUserService
     #region GetByIdAsync
 
     /// <inheritdoc />
-    public async Task<Result<AdminUserListDto>> GetByIdAsync(long id, CancellationToken cancellationToken)
+    public async Task<Result<AdminUserListDto>> GetByIdAsync(
+        Guid publicId,
+        CancellationToken cancellationToken
+    )
     {
-        if (id <= 0)
+        if (publicId == Guid.Empty)
             return LogFailure<AdminUserListDto>(
                 nameof(GetByIdAsync),
                 ResultType.ValidationError,
                 ErrorCodes.InvalidUserId
             );
 
-        var user = await _dbContext.AdminUsers
-            .AsNoTracking()
-            .Where(user => user.Id == id && !user.IsDeleted)
+        var user = await _dbContext
+            .AdminUsers.AsNoTracking()
+            .Where(user => user.PublicId == publicId && !user.IsDeleted)
             .Select(user => new AdminUserListDto
             {
-                Id = user.Id,
                 PublicId = user.PublicId,
                 UserName = user.UserName,
                 Email = user.Email,
-                IsActive = user.IsActive
+                IsActive = user.IsActive,
             })
             .FirstOrDefaultAsync(cancellationToken)
             .ConfigureAwait(false);
@@ -104,66 +107,81 @@ public sealed class AdminUserService : IAdminUserService
     #region CreateAsync
 
     /// <inheritdoc />
-    public async Task<Result<long>> CreateAsync(
+    public async Task<Result<Guid>> CreateAsync(
         CreateAdminUserDto request,
         CancellationToken cancellationToken
     )
     {
         ArgumentNullException.ThrowIfNull(request);
 
+        if (string.IsNullOrWhiteSpace(request.UserName))
+            return LogFailure<Guid>(
+                nameof(CreateAsync),
+                ResultType.ValidationError,
+                ErrorCodes.UserNameRequired
+            );
+
+        if (string.IsNullOrWhiteSpace(request.Email))
+            return LogFailure<Guid>(
+                nameof(CreateAsync),
+                ResultType.ValidationError,
+                ErrorCodes.EmailRequired
+            );
+
         if (string.IsNullOrWhiteSpace(request.Password))
-            return LogFailure<long>(
+            return LogFailure<Guid>(
                 nameof(CreateAsync),
                 ResultType.ValidationError,
                 ErrorCodes.PasswordRequired
             );
 
+        var normalizedUserName = request.UserName.Trim();
+        var normalizedEmail = request.Email.Trim();
         var user = new AdminUser { PublicId = Guid.NewGuid() };
         try
         {
-            user.ChangeUserName(request.UserName);
-            user.ChangeEmail(request.Email);
-
-            if (!request.IsActive)
-                user.Deactivate();
+            user.ChangeUserName(normalizedUserName);
+            user.ChangeEmail(normalizedEmail);
         }
         catch (DomainException exception)
         {
-            return LogFailure<long>(nameof(CreateAsync), ResultType.ValidationError, exception.Code);
-        }
-
-        if (await _dbContext.AdminUsers.AnyAsync(
-                existing => existing.UserName == user.UserName,
-                cancellationToken
-            ).ConfigureAwait(false))
-        {
-            return LogFailure<long>(
+            return LogFailure<Guid>(
                 nameof(CreateAsync),
-                ResultType.DuplicateRecord,
-                ErrorCodes.UserNameAlreadyExists
+                ResultType.ValidationError,
+                exception.Code
             );
         }
 
-        if (await _dbContext.AdminUsers.AnyAsync(
-                existing => existing.Email == user.Email,
+        var passwordErrorCode = ValidatePassword(request.Password);
+        if (passwordErrorCode is not null)
+            return LogFailure<Guid>(
+                nameof(CreateAsync),
+                ResultType.ValidationError,
+                passwordErrorCode
+            );
+
+        var duplicateErrorCode = await FindDuplicateErrorCodeAsync(
+                normalizedUserName,
+                normalizedEmail,
+                null,
                 cancellationToken
-            ).ConfigureAwait(false))
-        {
-            return LogFailure<long>(
+            )
+            .ConfigureAwait(false);
+
+        if (duplicateErrorCode is not null)
+            return LogFailure<Guid>(
                 nameof(CreateAsync),
                 ResultType.DuplicateRecord,
-                ErrorCodes.EmailAlreadyExists
+                duplicateErrorCode
             );
-        }
 
+        ApplyActiveStatus(user, request.IsActive);
         user.ChangePasswordHash(_passwordHasher.HashPassword(user, request.Password));
-        user.CreatedAt = DateTime.UtcNow;
-        user.UpdatedAt = user.CreatedAt;
         _dbContext.AdminUsers.Add(user);
         await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         _logger.LogInformation("Created admin user {AdminUserId}", user.Id);
-        return Result<long>.Success(user.Id);
+        return Result<Guid>.Success(user.PublicId);
     }
 
     #endregion
@@ -172,22 +190,25 @@ public sealed class AdminUserService : IAdminUserService
 
     /// <inheritdoc />
     public async Task<Result<AdminUserListDto>> UpdateAsync(
-        long id,
+        Guid publicId,
         UpdateAdminUserDto request,
         CancellationToken cancellationToken
     )
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        if (id <= 0)
+        if (publicId == Guid.Empty)
             return LogFailure<AdminUserListDto>(
                 nameof(UpdateAsync),
                 ResultType.ValidationError,
                 ErrorCodes.InvalidUserId
             );
 
-        var user = await _dbContext.AdminUsers
-            .FirstOrDefaultAsync(account => account.Id == id && !account.IsDeleted, cancellationToken)
+        var user = await _dbContext
+            .AdminUsers.FirstOrDefaultAsync(
+                account => account.PublicId == publicId && !account.IsDeleted,
+                cancellationToken
+            )
             .ConfigureAwait(false);
 
         if (user is null)
@@ -211,44 +232,39 @@ public sealed class AdminUserService : IAdminUserService
                 ErrorCodes.EmailRequired
             );
 
-        var normalizedUserName = request.UserName.Trim();
-        if (await _dbContext.AdminUsers.AnyAsync(
-                existing => existing.Id != id && existing.UserName == normalizedUserName,
-                cancellationToken
-            ).ConfigureAwait(false))
+        var candidate = new AdminUser { PublicId = user.PublicId };
+        try
+        {
+            candidate.ChangeUserName(request.UserName);
+            candidate.ChangeEmail(request.Email);
+        }
+        catch (DomainException exception)
         {
             return LogFailure<AdminUserListDto>(
                 nameof(UpdateAsync),
-                ResultType.DuplicateRecord,
-                ErrorCodes.UserNameAlreadyExists
+                ResultType.ValidationError,
+                exception.Code
             );
         }
 
-        var normalizedEmail = request.Email.Trim();
-        if (await _dbContext.AdminUsers.AnyAsync(
-                existing => existing.Id != id && existing.Email == normalizedEmail,
+        var duplicateErrorCode = await FindDuplicateErrorCodeAsync(
+                candidate.UserName,
+                candidate.Email,
+                user.Id,
                 cancellationToken
-            ).ConfigureAwait(false))
-        {
+            )
+            .ConfigureAwait(false);
+
+        if (duplicateErrorCode is not null)
             return LogFailure<AdminUserListDto>(
                 nameof(UpdateAsync),
                 ResultType.DuplicateRecord,
-                ErrorCodes.EmailAlreadyExists
+                duplicateErrorCode
             );
-        }
 
-        user.ChangeUserName(normalizedUserName);
-        user.ChangeEmail(normalizedEmail);
-
-        if (request.IsActive is bool desiredActive && desiredActive != user.IsActive)
-        {
-            if (desiredActive)
-                user.Activate();
-            else
-                user.Deactivate();
-        }
-
-        user.UpdatedAt = DateTime.UtcNow;
+        user.ChangeUserName(candidate.UserName);
+        user.ChangeEmail(candidate.Email);
+        ApplyActiveStatus(user, request.IsActive);
         await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         _logger.LogInformation("Updated admin user {AdminUserId}", user.Id);
@@ -260,17 +276,20 @@ public sealed class AdminUserService : IAdminUserService
     #region DeleteAsync
 
     /// <inheritdoc />
-    public async Task<Result<bool>> DeleteAsync(long id, CancellationToken cancellationToken)
+    public async Task<Result<bool>> DeleteAsync(Guid publicId, CancellationToken cancellationToken)
     {
-        if (id <= 0)
+        if (publicId == Guid.Empty)
             return LogFailure<bool>(
                 nameof(DeleteAsync),
                 ResultType.ValidationError,
                 ErrorCodes.InvalidUserId
             );
 
-        var user = await _dbContext.AdminUsers
-            .FirstOrDefaultAsync(account => account.Id == id && !account.IsDeleted, cancellationToken)
+        var user = await _dbContext
+            .AdminUsers.FirstOrDefaultAsync(
+                account => account.PublicId == publicId && !account.IsDeleted,
+                cancellationToken
+            )
             .ConfigureAwait(false);
 
         if (user is null)
@@ -280,12 +299,39 @@ public sealed class AdminUserService : IAdminUserService
                 ErrorCodes.AdminUserNotFound
             );
 
-        user.IsDeleted = true;
-        user.UpdatedAt = DateTime.UtcNow;
+        user.SoftDelete();
         await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         _logger.LogInformation("Soft-deleted admin user {AdminUserId}", user.Id);
         return Result<bool>.Success(true);
+    }
+
+    #endregion
+
+    #region ValidatePassword
+
+    private static string? ValidatePassword(string password)
+    {
+        if (password.Length < 8)
+            return ErrorCodes.PasswordPolicyInvalid;
+
+        if (!password.Any(char.IsUpper))
+            return ErrorCodes.PasswordPolicyInvalid;
+
+        if (!password.Any(char.IsLower))
+            return ErrorCodes.PasswordPolicyInvalid;
+
+        if (!password.Any(char.IsDigit))
+            return ErrorCodes.PasswordPolicyInvalid;
+
+        if (
+            !password.Any(character =>
+                !char.IsLetterOrDigit(character) && !char.IsWhiteSpace(character)
+            )
+        )
+            return ErrorCodes.PasswordPolicyInvalid;
+
+        return null;
     }
 
     #endregion
@@ -306,16 +352,68 @@ public sealed class AdminUserService : IAdminUserService
 
     #endregion
 
+    #region FindDuplicateErrorCodeAsync
+
+    private async Task<string?> FindDuplicateErrorCodeAsync(
+        string userName,
+        string email,
+        long? excludedUserId,
+        CancellationToken cancellationToken
+    )
+    {
+        var duplicateUserName = await _dbContext
+            .AdminUsers.AnyAsync(
+                existing =>
+                    existing.UserName == userName
+                    && !(existing.IsDeleted && !existing.IsActive)
+                    && (!excludedUserId.HasValue || existing.Id != excludedUserId.Value),
+                cancellationToken
+            )
+            .ConfigureAwait(false);
+
+        if (duplicateUserName)
+            return ErrorCodes.UserNameAlreadyExists;
+
+        var duplicateEmail = await _dbContext
+            .AdminUsers.AnyAsync(
+                existing =>
+                    existing.Email == email
+                    && !(existing.IsDeleted && !existing.IsActive)
+                    && (!excludedUserId.HasValue || existing.Id != excludedUserId.Value),
+                cancellationToken
+            )
+            .ConfigureAwait(false);
+
+        return duplicateEmail ? ErrorCodes.EmailAlreadyExists : null;
+    }
+
+    #endregion
+
+    #region ApplyActiveStatus
+
+    private static void ApplyActiveStatus(AdminUser user, bool? desiredActive)
+    {
+        if (desiredActive is not bool active || active == user.IsActive)
+            return;
+
+        if (active)
+            user.Activate();
+        else
+            user.Deactivate();
+    }
+
+    #endregion
+
     #region ToListDto
 
-    private static AdminUserListDto ToListDto(AdminUser user) => new()
-    {
-        Id = user.Id,
-        PublicId = user.PublicId,
-        UserName = user.UserName,
-        Email = user.Email,
-        IsActive = user.IsActive
-    };
+    private static AdminUserListDto ToListDto(AdminUser user) =>
+        new()
+        {
+            PublicId = user.PublicId,
+            UserName = user.UserName,
+            Email = user.Email,
+            IsActive = user.IsActive,
+        };
 
     #endregion
 }

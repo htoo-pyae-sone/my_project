@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Shared.Base;
 using Shared.Constants;
 
 namespace Domain;
@@ -32,6 +33,9 @@ public static class FeatureManager
         services.AddDbContext<AppDbContext>(opt =>
             opt.UseMySQL(connectionString).UseSnakeCaseNamingConvention()
         );
+
+        services.AddHttpContextAccessor();
+        services.AddScoped<IBaseService, BaseService>();
 
         services.AddHealthChecks().AddCheck<DatabaseHealthCheck>("database");
 

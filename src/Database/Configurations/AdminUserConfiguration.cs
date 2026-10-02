@@ -13,15 +13,27 @@ public class AdminUserConfiguration : IEntityTypeConfiguration<AdminUser>
         b.HasKey(x => x.Id);
 
         b.Property(x => x.PublicId).IsRequired();
-        b.Property(x => x.UserName).HasMaxLength(50).IsRequired();
+        b.Property(x => x.UserName).HasMaxLength(20).IsRequired();
         b.Property(x => x.Email).HasMaxLength(254).IsRequired();
         b.Property(x => x.PasswordHash).HasMaxLength(255).IsRequired();
         b.Property(x => x.IsActive).IsRequired();
 
-        // These values are used to identify accounts, so duplicates must be rejected by the database.
+        // Only active, non-deleted accounts participate in username and email uniqueness.
         b.HasIndex(x => x.PublicId).IsUnique();
-        b.HasIndex(x => x.UserName).IsUnique();
-        b.HasIndex(x => x.Email).IsUnique();
+        b.Property<string>("UniqueUserName")
+            .HasMaxLength(20)
+            .HasComputedColumnSql(
+                "CASE WHEN is_deleted = 1 AND is_active = 0 THEN NULL ELSE user_name END",
+                stored: true
+            );
+        b.Property<string>("UniqueEmail")
+            .HasMaxLength(254)
+            .HasComputedColumnSql(
+                "CASE WHEN is_deleted = 1 AND is_active = 0 THEN NULL ELSE email END",
+                stored: true
+            );
+        b.HasIndex("UniqueUserName").IsUnique();
+        b.HasIndex("UniqueEmail").IsUnique();
 
         // Restrict deletion of an admin who is referenced by audit fields; preserve the audit chain.
         b.HasOne(x => x.CreatedByUser)

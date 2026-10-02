@@ -1,5 +1,6 @@
 using Database.Exceptions;
 using Shared.Constants;
+using System.Net.Mail;
 
 namespace Database.AppDbContextModels;
 
@@ -51,14 +52,18 @@ public class AdminUser : AuditableEntity
         IsActive = false;
     }
 
-    /// <summary>Changes the email address after trimming it and checking it is not blank.</summary>
+    /// <summary>Changes the email address after trimming it and validating its format.</summary>
     /// <param name="email">The new email address.</param>
     public void ChangeEmail(string email)
     {
         if (string.IsNullOrWhiteSpace(email))
             throw new DomainException(ErrorCodes.EmailRequired);
 
-        Email = email.Trim();
+        var normalizedEmail = email.Trim();
+        if (!IsValidEmail(normalizedEmail))
+            throw new DomainException(ErrorCodes.EmailInvalid);
+
+        Email = normalizedEmail;
     }
 
     /// <summary>Changes the sign-in name after trimming it and checking it is not blank.</summary>
@@ -68,7 +73,14 @@ public class AdminUser : AuditableEntity
         if (string.IsNullOrWhiteSpace(userName))
             throw new DomainException(ErrorCodes.UserNameRequired);
 
-        UserName = userName.Trim();
+        var normalizedUserName = userName.Trim();
+        if (
+            normalizedUserName.Length > 20
+            || normalizedUserName.Any(character => !char.IsLetter(character))
+        )
+            throw new DomainException(ErrorCodes.UserNameInvalid);
+
+        UserName = normalizedUserName;
     }
 
     /// <summary>Changes the stored password verifier after checking it is not blank.</summary>
@@ -79,5 +91,31 @@ public class AdminUser : AuditableEntity
             throw new DomainException(ErrorCodes.PasswordHashRequired);
 
         PasswordHash = passwordHash;
+    }
+
+    /// <summary>Soft-deletes the account and prevents it from being used to sign in.</summary>
+    public void SoftDelete()
+    {
+        IsDeleted = true;
+        IsActive = false;
+    }
+
+    private static bool IsValidEmail(string email)
+    {
+        if (email.Length > 254 || email.Any(char.IsWhiteSpace))
+            return false;
+
+        try
+        {
+            var address = new MailAddress(email);
+            return string.Equals(address.Address, email, StringComparison.OrdinalIgnoreCase)
+                && address.Host.Contains('.', StringComparison.Ordinal)
+                && !address.Host.StartsWith('.')
+                && !address.Host.EndsWith('.');
+        }
+        catch (FormatException)
+        {
+            return false;
+        }
     }
 }
