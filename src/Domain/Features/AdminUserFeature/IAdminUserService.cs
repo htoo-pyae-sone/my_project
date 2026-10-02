@@ -23,14 +23,25 @@ public interface IAdminUserService
     /// <returns>The new account's public identifier, or a validation or duplicate result.</returns>
     Task<Result<Guid>> CreateAsync(CreateAdminUserDto request, CancellationToken cancellationToken);
 
-    /// <summary>Updates a non-deleted account selected by its public identifier.</summary>
+    // /// <summary>Updates a non-deleted account selected by its public identifier.</summary>
+    // /// <param name="publicId">Stable public identifier of the account to update.</param>
+    // /// <param name="request">Required username and email, plus an optional status change.</param>
+    // /// <param name="cancellationToken">Token used to cancel the database operation.</param>
+    // /// <returns>The updated account, or a not-found, validation, or duplicate result.</returns>
+    // Task<Result<AdminUserListDto>> UpdateAsync(
+    //     Guid publicId,
+    //     UpdateAdminUserDto request,
+    //     CancellationToken cancellationToken
+    // );
+
+    /// <summary>Partially updates a non-deleted account selected by its public identifier.</summary>
     /// <param name="publicId">Stable public identifier of the account to update.</param>
-    /// <param name="request">Required username and email, plus an optional status change.</param>
+    /// <param name="request">Optional profile fields or active status to change.</param>
     /// <param name="cancellationToken">Token used to cancel the database operation.</param>
-    /// <returns>The updated account, or a not-found, validation, or duplicate result.</returns>
-    Task<Result<AdminUserListDto>> UpdateAsync(
+    /// <returns>The updated account, or a validation, not-found, or duplicate result.</returns>
+    Task<Result<AdminUserListDto>> PatchUpdateAsync(
         Guid publicId,
-        UpdateAdminUserDto request,
+        PatchUpdateAdminUserDto request,
         CancellationToken cancellationToken
     );
 
@@ -39,4 +50,15 @@ public interface IAdminUserService
     /// <param name="cancellationToken">Token used to cancel the database operation.</param>
     /// <returns>True when the account was deleted, or a not-found result.</returns>
     Task<Result<bool>> DeleteAsync(Guid publicId, CancellationToken cancellationToken);
+
+    /// <summary>Changes the password for a non-deleted administrative user.</summary>
+    /// <param name="publicId">Stable public identifier of the account.</param>
+    /// <param name="request">New password that must satisfy the account security policy.</param>
+    /// <param name="cancellationToken">Token used to cancel the database operation.</param>
+    /// <returns>True when the password was changed, or a validation or not-found result.</returns>
+    Task<Result<bool>> ChangePasswordAsync(
+        Guid publicId,
+        ChangePasswordDto request,
+        CancellationToken cancellationToken
+    );
 }

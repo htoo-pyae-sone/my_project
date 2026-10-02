@@ -26,6 +26,9 @@ public static class ErrorCodes
     /// <summary>Error code returned when an account identifier is invalid.</summary>
     public const string InvalidUserId = "INVALID_USER_ID";
 
+    /// <summary>Error code returned when a partial update contains no fields.</summary>
+    public const string PatchFieldsRequired = "PATCH_FIELDS_REQUIRED";
+
     /// <summary>Error code returned when an administrative user cannot be found.</summary>
     public const string AdminUserNotFound = "ADMIN_USER_NOT_FOUND";
 

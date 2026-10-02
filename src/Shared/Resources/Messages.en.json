@@ -7,6 +7,7 @@
   "PASSWORD_REQUIRED": "Please enter password.",
   "PASSWORD_POLICY_INVALID": "Password must be at least 8 characters long and contain uppercase and lowercase letters, a number, and a special character.",
   "INVALID_USER_ID": "The user id is invalid.",
+  "PATCH_FIELDS_REQUIRED": "Provide at least one field to update.",
   "ADMIN_USER_NOT_FOUND": "The requested admin user was not found.",
   "USERNAME_ALREADY_EXISTS": "That username is already in use.",
   "EMAIL_ALREADY_EXISTS": "That email address is already in use.",
