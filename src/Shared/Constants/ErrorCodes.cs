@@ -5,14 +5,23 @@ public static class ErrorCodes
     /// <summary>Error code returned when an email address is missing.</summary>
     public const string EmailRequired = "EMAIL_REQUIRED";
 
+    /// <summary>Error code returned when an email address has an invalid format.</summary>
+    public const string EmailInvalid = "EMAIL_INVALID";
+
     /// <summary>Error code returned when a user name is missing.</summary>
     public const string UserNameRequired = "USERNAME_REQUIRED";
+
+    /// <summary>Error code returned when a username contains unsupported characters or is too long.</summary>
+    public const string UserNameInvalid = "USERNAME_INVALID";
 
     /// <summary>Error code returned when a password hash is missing.</summary>
     public const string PasswordHashRequired = "PASSWORD_HASH_REQUIRED";
 
     /// <summary>Error code returned when a password is missing.</summary>
     public const string PasswordRequired = "PASSWORD_REQUIRED";
+
+    /// <summary>Error code returned when a password does not meet the account security policy.</summary>
+    public const string PasswordPolicyInvalid = "PASSWORD_POLICY_INVALID";
 
     /// <summary>Error code returned when an account identifier is invalid.</summary>
     public const string InvalidUserId = "INVALID_USER_ID";

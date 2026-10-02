@@ -137,6 +137,29 @@ public sealed class AdminUserService : IAdminUserService
 
         var normalizedUserName = request.UserName.Trim();
         var normalizedEmail = request.Email.Trim();
+        var user = new AdminUser { PublicId = Guid.NewGuid() };
+        try
+        {
+            user.ChangeUserName(normalizedUserName);
+            user.ChangeEmail(normalizedEmail);
+        }
+        catch (DomainException exception)
+        {
+            return LogFailure<Guid>(
+                nameof(CreateAsync),
+                ResultType.ValidationError,
+                exception.Code
+            );
+        }
+
+        var passwordErrorCode = ValidatePassword(request.Password);
+        if (passwordErrorCode is not null)
+            return LogFailure<Guid>(
+                nameof(CreateAsync),
+                ResultType.ValidationError,
+                passwordErrorCode
+            );
+
         var duplicateErrorCode = await FindDuplicateErrorCodeAsync(
                 normalizedUserName,
                 normalizedEmail,
@@ -152,23 +175,7 @@ public sealed class AdminUserService : IAdminUserService
                 duplicateErrorCode
             );
 
-        var user = new AdminUser { PublicId = Guid.NewGuid() };
-        try
-        {
-            user.ChangeUserName(normalizedUserName);
-            user.ChangeEmail(normalizedEmail);
-
-            ApplyActiveStatus(user, request.IsActive);
-        }
-        catch (DomainException exception)
-        {
-            return LogFailure<Guid>(
-                nameof(CreateAsync),
-                ResultType.ValidationError,
-                exception.Code
-            );
-        }
-
+        ApplyActiveStatus(user, request.IsActive);
         user.ChangePasswordHash(_passwordHasher.HashPassword(user, request.Password));
         _dbContext.AdminUsers.Add(user);
         await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
@@ -225,11 +232,24 @@ public sealed class AdminUserService : IAdminUserService
                 ErrorCodes.EmailRequired
             );
 
-        var normalizedUserName = request.UserName.Trim();
-        var normalizedEmail = request.Email.Trim();
+        var candidate = new AdminUser { PublicId = user.PublicId };
+        try
+        {
+            candidate.ChangeUserName(request.UserName);
+            candidate.ChangeEmail(request.Email);
+        }
+        catch (DomainException exception)
+        {
+            return LogFailure<AdminUserListDto>(
+                nameof(UpdateAsync),
+                ResultType.ValidationError,
+                exception.Code
+            );
+        }
+
         var duplicateErrorCode = await FindDuplicateErrorCodeAsync(
-                normalizedUserName,
-                normalizedEmail,
+                candidate.UserName,
+                candidate.Email,
                 user.Id,
                 cancellationToken
             )
@@ -242,8 +262,8 @@ public sealed class AdminUserService : IAdminUserService
                 duplicateErrorCode
             );
 
-        user.ChangeUserName(normalizedUserName);
-        user.ChangeEmail(normalizedEmail);
+        user.ChangeUserName(candidate.UserName);
+        user.ChangeEmail(candidate.Email);
         ApplyActiveStatus(user, request.IsActive);
         await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
@@ -279,11 +299,39 @@ public sealed class AdminUserService : IAdminUserService
                 ErrorCodes.AdminUserNotFound
             );
 
-        user.IsDeleted = true;
+        user.SoftDelete();
         await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         _logger.LogInformation("Soft-deleted admin user {AdminUserId}", user.Id);
         return Result<bool>.Success(true);
+    }
+
+    #endregion
+
+    #region ValidatePassword
+
+    private static string? ValidatePassword(string password)
+    {
+        if (password.Length < 8)
+            return ErrorCodes.PasswordPolicyInvalid;
+
+        if (!password.Any(char.IsUpper))
+            return ErrorCodes.PasswordPolicyInvalid;
+
+        if (!password.Any(char.IsLower))
+            return ErrorCodes.PasswordPolicyInvalid;
+
+        if (!password.Any(char.IsDigit))
+            return ErrorCodes.PasswordPolicyInvalid;
+
+        if (
+            !password.Any(character =>
+                !char.IsLetterOrDigit(character) && !char.IsWhiteSpace(character)
+            )
+        )
+            return ErrorCodes.PasswordPolicyInvalid;
+
+        return null;
     }
 
     #endregion
@@ -317,6 +365,7 @@ public sealed class AdminUserService : IAdminUserService
             .AdminUsers.AnyAsync(
                 existing =>
                     existing.UserName == userName
+                    && !(existing.IsDeleted && !existing.IsActive)
                     && (!excludedUserId.HasValue || existing.Id != excludedUserId.Value),
                 cancellationToken
             )
@@ -329,6 +378,7 @@ public sealed class AdminUserService : IAdminUserService
             .AdminUsers.AnyAsync(
                 existing =>
                     existing.Email == email
+                    && !(existing.IsDeleted && !existing.IsActive)
                     && (!excludedUserId.HasValue || existing.Id != excludedUserId.Value),
                 cancellationToken
             )

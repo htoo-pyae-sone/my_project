@@ -34,7 +34,7 @@ public interface IAdminUserService
         CancellationToken cancellationToken
     );
 
-    /// <summary>Soft-deletes an account while preserving its audit history.</summary>
+    /// <summary>Soft-deletes and deactivates an account while preserving its audit history.</summary>
     /// <param name="publicId">Stable public identifier of the account to delete.</param>
     /// <param name="cancellationToken">Token used to cancel the database operation.</param>
     /// <returns>True when the account was deleted, or a not-found result.</returns>
