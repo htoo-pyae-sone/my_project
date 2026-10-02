@@ -38,12 +38,13 @@ The API provides these administrative user endpoints:
 - `GET /api/admin_user` — list users that have not been deleted.
 - `GET /api/admin_user/{publicId}` — get a user by public identifier.
 - `POST /api/admin_user` — create a user; returns HTTP 201 and a link to the new user.
-- `PUT /api/admin_user/{publicId}` — update a user's name, email, and optional active status.
+- `PATCH /api/admin_user/{publicId}` — partially update a user's name, email, or active status.
+- `PUT /api/admin_user/{publicId}/password` — change a user's password.
 - `DELETE /api/admin_user/{publicId}` — soft-delete and deactivate a user.
 
 Successful responses include the `Result<T>` envelope described below. Deleting a user marks the account as deleted, deactivates it, and preserves its record and audit history. Its username and email can then be reused.
 
-Usernames may contain letters only and are limited to 20 characters. Creating a user requires a password of at least eight characters with uppercase and lowercase letters, a number, and a special character.
+Usernames may contain letters only and are limited to 20 characters. Creating or changing a password requires at least eight characters with uppercase and lowercase letters, a number, and a special character.
 
 ## API results and errors
 

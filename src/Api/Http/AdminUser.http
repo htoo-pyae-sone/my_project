@@ -1,5 +1,5 @@
 @baseUrl = http://localhost:5131
-@publicId = 315f4599-1404-4f42-890c-c96b7cebde16
+@publicId = c3908ba6-c6d2-454f-9646-25c3bdaae699
 
 ### List administrative users
 GET {{baseUrl}}/api/admin_user
@@ -15,9 +15,9 @@ POST {{baseUrl}}/api/admin_user
 Content-Type: application/json
 
 {
-  "userName": "htooo",
-  "email": "htoo2@gmail.com",
-  "password": "Htoo",
+  "userName": "htoo",
+  "email": "htoo@gmail.com",
+  "password": "Htoo@123",
   "isActive": true
 }
 
@@ -27,8 +27,26 @@ Content-Type: application/json
 
 {
   "userName": "httooo",
-  "email": "htoo@gmail",
+  "email": "htoo3@gmail.com",
   "isActive": true
+}
+
+### Change an administrative user's password
+PUT {{baseUrl}}/api/admin_user/{{publicId}}/password
+Content-Type: application/json
+
+{
+  "newPassword": "NewHtoo@456"
+}
+
+### Partially update an administrative user
+PATCH {{baseUrl}}/api/admin_user/{{publicId}}
+Content-Type: application/json
+
+{
+  "userName": null,
+  "email": "htoo1@gmail",
+  "isActive": null
 }
 
 ### Soft-delete an administrative user

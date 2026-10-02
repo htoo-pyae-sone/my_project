@@ -186,12 +186,99 @@ public sealed class AdminUserService : IAdminUserService
 
     #endregion
 
-    #region UpdateAsync
+    // #region UpdateAsync
+
+    // /// <inheritdoc />
+    // public async Task<Result<AdminUserListDto>> UpdateAsync(
+    //     Guid publicId,
+    //     UpdateAdminUserDto request,
+    //     CancellationToken cancellationToken
+    // )
+    // {
+    //     ArgumentNullException.ThrowIfNull(request);
+
+    //     if (publicId == Guid.Empty)
+    //         return LogFailure<AdminUserListDto>(
+    //             nameof(UpdateAsync),
+    //             ResultType.ValidationError,
+    //             ErrorCodes.InvalidUserId
+    //         );
+
+    //     var user = await _dbContext
+    //         .AdminUsers.FirstOrDefaultAsync(
+    //             account => account.PublicId == publicId && !account.IsDeleted,
+    //             cancellationToken
+    //         )
+    //         .ConfigureAwait(false);
+
+    //     if (user is null)
+    //         return LogFailure<AdminUserListDto>(
+    //             nameof(UpdateAsync),
+    //             ResultType.NotFound,
+    //             ErrorCodes.AdminUserNotFound
+    //         );
+
+    //     if (string.IsNullOrWhiteSpace(request.UserName))
+    //         return LogFailure<AdminUserListDto>(
+    //             nameof(UpdateAsync),
+    //             ResultType.ValidationError,
+    //             ErrorCodes.UserNameRequired
+    //         );
+
+    //     if (string.IsNullOrWhiteSpace(request.Email))
+    //         return LogFailure<AdminUserListDto>(
+    //             nameof(UpdateAsync),
+    //             ResultType.ValidationError,
+    //             ErrorCodes.EmailRequired
+    //         );
+
+    //     var candidate = new AdminUser { PublicId = user.PublicId };
+    //     try
+    //     {
+    //         candidate.ChangeUserName(request.UserName);
+    //         candidate.ChangeEmail(request.Email);
+    //     }
+    //     catch (DomainException exception)
+    //     {
+    //         return LogFailure<AdminUserListDto>(
+    //             nameof(UpdateAsync),
+    //             ResultType.ValidationError,
+    //             exception.Code
+    //         );
+    //     }
+
+    //     var duplicateErrorCode = await FindDuplicateErrorCodeAsync(
+    //             candidate.UserName,
+    //             candidate.Email,
+    //             user.Id,
+    //             cancellationToken
+    //         )
+    //         .ConfigureAwait(false);
+
+    //     if (duplicateErrorCode is not null)
+    //         return LogFailure<AdminUserListDto>(
+    //             nameof(UpdateAsync),
+    //             ResultType.DuplicateRecord,
+    //             duplicateErrorCode
+    //         );
+
+    //     user.ChangeUserName(candidate.UserName);
+    //     user.ChangeEmail(candidate.Email);
+    //     ApplyActiveStatus(user, request.IsActive);
+    //     await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+    //     _logger.LogInformation("Updated admin user {AdminUserId}", user.Id);
+    //     return Result<AdminUserListDto>.Success(ToListDto(user));
+    // }
+
+    // #endregion
+
+    #region PatchUpdateAsync
 
     /// <inheritdoc />
-    public async Task<Result<AdminUserListDto>> UpdateAsync(
+    public async Task<Result<AdminUserListDto>> PatchUpdateAsync(
         Guid publicId,
-        UpdateAdminUserDto request,
+        PatchUpdateAdminUserDto request,
         CancellationToken cancellationToken
     )
     {
@@ -199,9 +286,16 @@ public sealed class AdminUserService : IAdminUserService
 
         if (publicId == Guid.Empty)
             return LogFailure<AdminUserListDto>(
-                nameof(UpdateAsync),
+                nameof(PatchUpdateAsync),
                 ResultType.ValidationError,
                 ErrorCodes.InvalidUserId
+            );
+
+        if (request.UserName is null && request.Email is null && request.IsActive is null)
+            return LogFailure<AdminUserListDto>(
+                nameof(PatchUpdateAsync),
+                ResultType.ValidationError,
+                ErrorCodes.PatchFieldsRequired
             );
 
         var user = await _dbContext
@@ -213,35 +307,21 @@ public sealed class AdminUserService : IAdminUserService
 
         if (user is null)
             return LogFailure<AdminUserListDto>(
-                nameof(UpdateAsync),
+                nameof(PatchUpdateAsync),
                 ResultType.NotFound,
                 ErrorCodes.AdminUserNotFound
-            );
-
-        if (string.IsNullOrWhiteSpace(request.UserName))
-            return LogFailure<AdminUserListDto>(
-                nameof(UpdateAsync),
-                ResultType.ValidationError,
-                ErrorCodes.UserNameRequired
-            );
-
-        if (string.IsNullOrWhiteSpace(request.Email))
-            return LogFailure<AdminUserListDto>(
-                nameof(UpdateAsync),
-                ResultType.ValidationError,
-                ErrorCodes.EmailRequired
             );
 
         var candidate = new AdminUser { PublicId = user.PublicId };
         try
         {
-            candidate.ChangeUserName(request.UserName);
-            candidate.ChangeEmail(request.Email);
+            candidate.ChangeUserName(request.UserName ?? user.UserName);
+            candidate.ChangeEmail(request.Email ?? user.Email);
         }
         catch (DomainException exception)
         {
             return LogFailure<AdminUserListDto>(
-                nameof(UpdateAsync),
+                nameof(PatchUpdateAsync),
                 ResultType.ValidationError,
                 exception.Code
             );
@@ -257,17 +337,33 @@ public sealed class AdminUserService : IAdminUserService
 
         if (duplicateErrorCode is not null)
             return LogFailure<AdminUserListDto>(
-                nameof(UpdateAsync),
+                nameof(PatchUpdateAsync),
                 ResultType.DuplicateRecord,
                 duplicateErrorCode
             );
 
-        user.ChangeUserName(candidate.UserName);
-        user.ChangeEmail(candidate.Email);
-        ApplyActiveStatus(user, request.IsActive);
+        try
+        {
+            if (request.UserName is not null)
+                user.ChangeUserName(candidate.UserName);
+
+            if (request.Email is not null)
+                user.ChangeEmail(candidate.Email);
+
+            ApplyActiveStatus(user, request.IsActive);
+        }
+        catch (DomainException exception)
+        {
+            return LogFailure<AdminUserListDto>(
+                nameof(PatchUpdateAsync),
+                ResultType.ValidationError,
+                exception.Code
+            );
+        }
+
         await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        _logger.LogInformation("Updated admin user {AdminUserId}", user.Id);
+        _logger.LogInformation("Patched admin user {AdminUserId}", user.Id);
         return Result<AdminUserListDto>.Success(ToListDto(user));
     }
 
@@ -303,6 +399,62 @@ public sealed class AdminUserService : IAdminUserService
         await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         _logger.LogInformation("Soft-deleted admin user {AdminUserId}", user.Id);
+        return Result<bool>.Success(true);
+    }
+
+    #endregion
+
+    #region ChangePasswordAsync
+
+    /// <inheritdoc />
+    public async Task<Result<bool>> ChangePasswordAsync(
+        Guid publicId,
+        ChangePasswordDto request,
+        CancellationToken cancellationToken
+    )
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        if (publicId == Guid.Empty)
+            return LogFailure<bool>(
+                nameof(ChangePasswordAsync),
+                ResultType.ValidationError,
+                ErrorCodes.InvalidUserId
+            );
+
+        if (string.IsNullOrWhiteSpace(request.NewPassword))
+            return LogFailure<bool>(
+                nameof(ChangePasswordAsync),
+                ResultType.ValidationError,
+                ErrorCodes.PasswordRequired
+            );
+
+        var passwordErrorCode = ValidatePassword(request.NewPassword);
+        if (passwordErrorCode is not null)
+            return LogFailure<bool>(
+                nameof(ChangePasswordAsync),
+                ResultType.ValidationError,
+                passwordErrorCode
+            );
+
+        var user = await _dbContext
+            .AdminUsers.FirstOrDefaultAsync(
+                account => account.PublicId == publicId && !account.IsDeleted,
+                cancellationToken
+            )
+            .ConfigureAwait(false);
+
+        if (user is null)
+            return LogFailure<bool>(
+                nameof(ChangePasswordAsync),
+                ResultType.NotFound,
+                ErrorCodes.AdminUserNotFound
+            );
+
+        user.ChangePasswordHash(_passwordHasher.HashPassword(user, request.NewPassword));
+        await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        _logger.LogInformation("Changed password for admin user {AdminUserId}", user.Id);
         return Result<bool>.Success(true);
     }
 
